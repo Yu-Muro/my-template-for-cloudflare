@@ -1,0 +1,47 @@
+{
+    "mcpServers": {
+        "chrome-devtools": {
+            "command": "npx",
+            "args": [
+                "chrome-devtools-mcp@latest"
+            ]
+        },
+        "cloudflare-docs": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                "https://docs.mcp.cloudflare.com/mcp"
+            ]
+        },
+        "context7": {
+            "url": "https://mcp.context7.com/mcp",
+            "headers": {
+                "CONTEXT7_API_KEY": "my_context7_api_key"
+            }
+        },
+        "sequential-thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ]
+        },
+        "perplexity": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@perplexity-ai/mcp-server"
+            ],
+            "env": {
+                "PERPLEXITY_API_KEY": "my_perplexity_api_key",
+                "PERPLEXITY_TIMEOUT_MS": "600000"
+            }
+        },
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "@playwright/mcp@latest"
+            ]
+        }
+    }
+}

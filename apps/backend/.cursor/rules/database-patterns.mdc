@@ -1,0 +1,252 @@
+# Database Patterns & Best Practices
+
+## Database Technology Stack
+
+- **ORM**: Drizzle ORM
+- **Database**: PostgreSQL
+- **Connection**: Cloudflare Hyperdrive
+- **Local Development**: Docker Compose with PostgreSQL
+- **Migration Tool**: Drizzle Kit
+
+## Database Schema Design
+
+### Naming Conventions
+- Use snake_case for table and column names
+- Use descriptive names for tables and columns
+- Prefix with table name for foreign keys
+- Use consistent naming across the schema
+
+### Common Fields
+```typescript
+// Standard fields for all tables
+{
+    id: serial('id').primaryKey(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'), // Soft delete
+}
+```
+
+### User Table Pattern
+```typescript
+export const users = pgTable('users', {
+    id: serial('id').primaryKey(),
+    name: varchar('name', { length: 255 }).notNull(),
+    email: varchar('email', { length: 255 }).notNull().unique(),
+    password: text('password').notNull(),
+    role: varchar('role', { length: 50 }).notNull().default('user'),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
+});
+```
+
+## Database Connection
+
+### Cloudflare Workers Environment
+```typescript
+interface Hyperdrive {
+    connectionString: string;
+}
+
+export interface Env {
+    HYPERDRIVE: Hyperdrive;
+}
+
+export function createDatabaseClient(env: Env) {
+    const sql = postgres(env.HYPERDRIVE.connectionString, {
+        max: 5, // Limit connections for Workers
+        fetch_types: false, // Disable for better performance
+    });
+    return drizzle(sql);
+}
+```
+
+### Local Development
+- Use Docker Compose for PostgreSQL
+- Configure connection via DATABASE_URL environment variable
+- Use Drizzle Studio for database management
+
+## Query Patterns
+
+### Basic CRUD Operations
+```typescript
+// Create
+const newUser = await db.insert(users).values({
+    name: 'John Doe',
+    email: 'john@example.com',
+    password: hashedPassword,
+}).returning();
+
+// Read
+const allUsers = await db.select().from(users);
+const user = await db.select().from(users).where(eq(users.id, userId));
+
+// Update
+const updatedUser = await db.update(users)
+    .set({ name: 'Jane Doe' })
+    .where(eq(users.id, userId))
+    .returning();
+
+// Delete (Soft Delete)
+const deletedUser = await db.update(users)
+    .set({ deletedAt: new Date() })
+    .where(eq(users.id, userId))
+    .returning();
+```
+
+### Complex Queries
+```typescript
+// Join queries
+const userWithPosts = await db
+    .select({
+        user: users,
+        posts: posts,
+    })
+    .from(users)
+    .leftJoin(posts, eq(users.id, posts.userId))
+    .where(eq(users.id, userId));
+
+// Aggregation
+const userCount = await db
+    .select({ count: count() })
+    .from(users)
+    .where(isNull(users.deletedAt));
+```
+
+## Migration Management
+
+### Creating Migrations
+```bash
+bun run db:generate
+```
+
+### Running Migrations
+```bash
+bun run db:migrate
+```
+
+### Migration Best Practices
+- Always test migrations on development data
+- Use descriptive migration names
+- Include rollback strategies
+- Test with production-like data volumes
+
+## Security Considerations
+
+### Password Hashing
+- Use bcryptjs for password hashing
+- Never store plain text passwords
+- Use appropriate salt rounds (12+ recommended)
+
+### Input Validation
+- Validate all inputs with Zod schemas
+- Sanitize data before database operations
+- Use parameterized queries (handled by Drizzle)
+
+### Access Control
+- Implement proper role-based access control
+- Use database-level constraints
+- Audit sensitive operations
+
+## Performance Optimization
+
+### Connection Management
+- Limit connection pool size in Workers environment
+- Use connection pooling for local development
+- Monitor connection usage
+
+### Query Optimization
+- Use indexes for frequently queried columns
+- Avoid N+1 query problems
+- Use pagination for large datasets
+- Implement proper caching strategies
+
+### Indexing Strategy
+```sql
+-- Common indexes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_deleted_at ON users(deleted_at);
+CREATE INDEX idx_users_created_at ON users(created_at);
+```
+
+## Error Handling
+
+### Database Errors
+```typescript
+try {
+    const result = await db.insert(users).values(userData);
+    return { success: true, data: result };
+} catch (error) {
+    if (error.code === '23505') { // Unique constraint violation
+        return { success: false, error: 'User already exists' };
+    }
+    return { success: false, error: 'Database operation failed' };
+}
+```
+
+### Validation Errors
+- Use Zod for input validation
+- Return detailed error messages
+- Log errors for debugging
+
+## Testing Database Operations
+
+### Test Setup
+- Use test database for unit tests
+- Reset database state between tests
+- Mock external dependencies
+
+### Test Patterns
+```typescript
+describe('UserRepository', () => {
+    beforeEach(async () => {
+        // Reset test database
+        await db.delete(users);
+    });
+
+    it('should create a new user', async () => {
+        const userData = { name: 'Test User', email: 'test@example.com' };
+        const result = await createUser(userData);
+        expect(result.success).toBe(true);
+    });
+});
+```
+
+## Monitoring and Logging
+
+### Database Monitoring
+- Monitor query performance
+- Track connection usage
+- Set up alerts for errors
+- Log slow queries
+
+### Health Checks
+```typescript
+export async function checkDatabaseHealth(db: Database) {
+    try {
+        await db.select({ count: count() }).from(users);
+        return { healthy: true };
+    } catch (error) {
+        return { healthy: false, error: error.message };
+    }
+}
+```
+
+## Backup and Recovery
+
+### Backup Strategy
+- Regular automated backups
+- Test backup restoration
+- Store backups securely
+- Document recovery procedures
+
+### Data Integrity
+- Use transactions for complex operations
+- Implement proper foreign key constraints
+- Use database triggers for audit trails
+- Regular data validation checks
+description:
+globs:
+alwaysApply: true
+---

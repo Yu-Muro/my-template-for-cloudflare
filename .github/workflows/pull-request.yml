@@ -1,0 +1,138 @@
+name: Pull Request Build & Test
+
+env:
+  NEXT_PUBLIC_API_URL: http://localhost:8080
+
+on:
+  pull_request:
+    branches:
+      - release
+      - develop
+    types: [opened, synchronize, reopened]
+
+jobs:
+  lint-and-test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd apps/backend
+          bun install
+
+      - name: Lint backend code
+        run: |
+          cd apps/backend
+          bun run lint
+
+      - name: Type check backend
+        run: |
+          cd apps/backend
+          bun run type-check
+
+      - name: Test backend
+        run: |
+          cd apps/backend
+          bun run test
+
+      - name: Build backend
+        run: |
+          cd apps/backend
+          bun run build
+
+  lint-and-test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd apps/frontend
+          bun install
+
+      - name: Lint frontend code
+        run: |
+          cd apps/frontend
+          bun run lint
+
+      - name: Type check frontend
+        run: |
+          cd apps/frontend
+          bun run type-check
+
+      - name: Test frontend
+        run: |
+          cd apps/frontend
+          bun run test
+
+      - name: Build for Cloudflare
+        run: |
+          cd apps/frontend
+          bun run build:cloudflare
+
+  # Dependabot auto-approve job
+  dependabot-auto-approve:
+    if: github.actor == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [lint-and-test-backend, lint-and-test-frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Show update type
+        run: |
+          echo "Update type: ${{ steps.metadata.outputs.update-type }}"
+          echo "Package ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}"
+          echo "Package name: ${{ steps.metadata.outputs.package-name }}"
+
+      - name: Approve PR
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on major updates
+        if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-major' }}
+        run: |
+          gh pr comment "$PR_URL" --body "⚠️ **Major version update detected** ⚠️
+
+          This is a major version update that may include breaking changes. Please review manually before merging.
+
+          **Update Details:**
+          - Package: ${{ steps.metadata.outputs.package-name }}
+          - Ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}
+          - Update Type: ${{ steps.metadata.outputs.update-type }}"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

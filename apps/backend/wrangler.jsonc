@@ -1,0 +1,29 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "your_project_name",
+    "main": "src/index.ts",
+    "compatibility_date": "2025-02-24",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "env": {
+        "dev": {
+            "name": "your_database_name-dev",
+            "hyperdrive": [
+                {
+                    "binding": "HYPERDRIVE",
+                    "id": "your_database_id-dev"
+                }
+            ]
+        },
+        "prod": {
+            "name": "your_database_name",
+            "hyperdrive": [
+                {
+                    "binding": "HYPERDRIVE",
+                    "id": "your_database_id"
+                }
+            ]
+        }
+    }
+}

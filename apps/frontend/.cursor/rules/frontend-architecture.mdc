@@ -1,0 +1,248 @@
+# Frontend Architecture & Coding Rules
+
+## Architecture Overview
+
+This frontend uses Next.js 15 with App Router and is optimized for Cloudflare deployment:
+
+```
+app/
+├── layout.tsx              # Root layout
+├── page.tsx               # Home page
+├── globals.css            # Global styles
+├── types/                 # TypeScript type definitions
+└── utils/                 # Utility functions
+```
+
+## Technology Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Package Manager**: Bun
+- **Linting/Formatting**: Biome
+- **Deployment**: Cloudflare Workers (via OpenNext)
+- **Fonts**: Geist (Google Fonts)
+- **API Client**: Hono Client for type-safe API calls
+- **Backend Integration**: Direct import from backend package
+
+## Coding Standards
+
+### File Naming
+- Use PascalCase for components: `TodoList.tsx`
+- Use camelCase for functions and variables: `handleSubmit`
+- Use kebab-case for files: `todo-list.tsx`
+- Use descriptive names for pages and components
+
+### Directory Structure
+- Follow Next.js App Router conventions
+- Keep components in appropriate directories
+- Use `utils/` for utility functions (API client)
+- Import backend types directly for type safety
+- Use 'use client' directive for client components
+
+### TypeScript Rules
+- Avoid `any` type - use proper typing
+- Define interfaces for props and API responses
+- Use strict TypeScript configuration
+- Prefer readonly properties where possible
+
+### React Best Practices
+- Use functional components with hooks
+- Prefer `const` over `let` and `var`
+- Use proper prop typing
+- Implement proper error boundaries
+- Use React.memo for performance optimization when needed
+
+### Styling Guidelines
+- Use Tailwind CSS for styling
+- Follow mobile-first responsive design
+- Use CSS custom properties for theming
+- Keep styles consistent across components
+
+## Component Structure
+
+### Basic Component Template
+```tsx
+import React from 'react';
+
+interface ComponentProps {
+  // Define props here
+}
+
+export default function ComponentName({ prop1, prop2 }: ComponentProps) {
+  return (
+    <div className="container">
+      {/* Component content */}
+    </div>
+  );
+}
+```
+
+### Page Component Template
+```tsx
+import React from 'react';
+
+export default function PageName() {
+  return (
+    <main className="min-h-screen">
+      {/* Page content */}
+    </main>
+  );
+}
+```
+
+## API Integration
+
+### API Client
+- Use Hono Client for type-safe API calls
+- Import backend types directly: `import type { AppType } from 'backend/src'`
+- Handle loading and error states properly
+- Implement proper error handling
+- Use TypeScript for API response types
+
+### Backend Integration
+- Direct import from backend package for type safety
+- Use environment variables for API URLs
+- Implement proper error boundaries for API calls
+
+### Data Fetching
+- Use React Query or SWR for data fetching (future)
+- Implement proper caching strategies
+- Handle loading and error states
+- Use optimistic updates where appropriate
+
+## State Management
+
+### Local State
+- Use React hooks (useState, useEffect, useCallback)
+- Keep state as local as possible
+- Use useReducer for complex state logic
+
+### Global State
+- Consider Zustand or Context API for global state
+- Avoid prop drilling
+- Keep state normalized
+
+## Performance Optimization
+
+### Code Splitting
+- Use dynamic imports for large components
+- Implement proper loading states
+- Optimize bundle size
+
+### Image Optimization
+- Use Next.js Image component
+- Implement proper lazy loading
+- Optimize image formats and sizes
+
+### Font Optimization
+- Use Next.js font optimization
+- Preload critical fonts
+- Use font-display: swap
+
+## Accessibility
+
+### Standards
+- Follow WCAG 2.1 guidelines
+- Use semantic HTML elements
+- Implement proper ARIA labels
+- Ensure keyboard navigation works
+
+### Testing
+- Test with screen readers
+- Ensure proper color contrast
+- Test with keyboard-only navigation
+
+## Development Workflow
+
+### Scripts
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run build:cloudflare` - Build for Cloudflare
+- `bun run lint` - Run Biome linter
+- `bun run type-check` - Run TypeScript type checking
+
+### Code Quality
+- Run linting before commits
+- Ensure type checking passes
+- Follow React best practices
+- Write meaningful commit messages
+
+## Styling with Tailwind CSS
+
+### Class Organization
+- Group related classes together
+- Use consistent spacing and sizing
+- Follow Tailwind's responsive design patterns
+
+### Custom Styles
+- Use CSS custom properties for theming
+- Extend Tailwind config when needed
+- Keep custom CSS minimal
+
+### Responsive Design
+- Use mobile-first approach
+- Test on multiple screen sizes
+- Use Tailwind's responsive prefixes
+
+## Testing Guidelines
+
+### Test Structure
+- Unit tests for components
+- Integration tests for pages
+- E2E tests for user flows
+
+### Testing Tools
+- Use React Testing Library
+- Test user interactions
+- Mock API calls appropriately
+
+## Security Considerations
+
+- Sanitize user inputs
+- Implement proper CSRF protection
+- Use HTTPS in production
+- Validate data on both client and server
+
+## SEO & Meta
+
+### Meta Tags
+- Use Next.js metadata API
+- Implement proper title and description
+- Add Open Graph tags
+- Include structured data
+
+### Performance
+- Optimize Core Web Vitals
+- Implement proper caching
+- Use CDN for static assets
+
+## Deployment
+
+### Cloudflare Deployment
+- Use OpenNext for Cloudflare compatibility
+- Configure environment variables
+- Set up proper routing
+- Monitor performance
+
+### Environment Configuration
+- Use environment variables for API URLs
+- Configure different environments (dev, staging, prod)
+- Keep secrets secure
+
+## Error Handling
+
+### Client-Side Errors
+- Implement error boundaries
+- Show user-friendly error messages
+- Log errors appropriately
+- Provide fallback UI
+
+### API Errors
+- Handle network errors gracefully
+- Show appropriate error messages
+- Implement retry logic where appropriate
+description:
+globs:
+alwaysApply: true
+---

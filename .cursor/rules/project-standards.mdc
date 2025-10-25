@@ -1,0 +1,237 @@
+# Project Standards & Best Practices
+
+## Project Overview
+
+This is a monorepo project using Bun workspaces with the following structure:
+
+```
+├── apps/
+│   ├── backend/          # Cloudflare Workers API
+│   └── frontend/         # Next.js 15 App
+├── docs/                 # Documentation
+├── .github/              # GitHub Actions workflows
+└── .cursor/              # Cursor IDE configuration
+```
+
+## Technology Stack
+
+### Core Technologies
+- **Package Manager**: Bun (workspaces)
+- **Language**: TypeScript
+- **Linting/Formatting**: Biome
+- **Version Control**: Git
+- **CI/CD**: GitHub Actions
+
+### Backend
+- **Runtime**: Cloudflare Workers
+- **Framework**: Hono.js
+- **Architecture**: Clean Architecture
+- **Validation**: Zod
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: bcryptjs for password hashing
+
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS v4
+- **Deployment**: Cloudflare Workers (OpenNext)
+- **API Client**: Hono Client for type-safe API calls
+- **Backend Integration**: Direct import from backend package
+
+## Coding Standards
+
+### General Rules
+- Use TypeScript for all code
+- Avoid `any` type - use proper typing
+- Follow consistent naming conventions
+- Write self-documenting code
+- Keep functions small and focused
+
+### File Naming Conventions
+- **Components**: PascalCase (`TodoList.tsx`)
+- **Functions/Variables**: camelCase (`handleSubmit`)
+- **Files**: kebab-case (`todo-list.tsx`)
+- **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`)
+
+### Code Organization
+- Group related functionality together
+- Use clear and descriptive names
+- Keep files focused on a single responsibility
+- Follow the principle of least surprise
+
+## Git Workflow
+
+### Branch Naming
+- Use descriptive branch names
+- Follow pattern: `type/description`
+- Examples: `feature/user-authentication`, `fix/api-error-handling`
+
+### Commit Messages
+- Use conventional commit format
+- Be descriptive and concise
+- Reference issues when applicable
+
+### Commit Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code refactoring
+- `test`: Test additions/changes
+- `chore`: Maintenance tasks
+
+## Development Workflow
+
+### Setup
+1. Install Bun
+2. Clone repository
+3. Run `bun install` in root
+4. Set up environment variables
+5. Start PostgreSQL database with Docker Compose
+6. Run database migrations
+7. Start development servers
+
+### Scripts
+- `bun run dev` - Start development servers
+- `bun run build` - Build all packages
+- `bun run lint` - Run Biome linter
+- `bun run type-check` - Run TypeScript type checking
+- `bun run db:generate` - Generate database migrations
+- `bun run db:migrate` - Run database migrations
+- `bun run db:studio` - Open database management UI
+
+### Code Quality
+- Run linting before commits
+- Ensure type checking passes
+- Write tests for new features
+- Follow established patterns
+
+## Environment Management
+
+### Environment Variables
+- Use `.env` files for local development
+- Use GitHub Secrets for production
+- Never commit sensitive data
+- Document required environment variables
+- Configure database connection strings
+- Set up API URLs for frontend-backend communication
+
+### Configuration
+- Use environment-specific configs
+- Validate configuration at startup
+- Provide sensible defaults
+- Use TypeScript for config types
+
+## Testing Strategy
+
+### Test Types
+- **Unit Tests**: Test individual functions/components
+- **Integration Tests**: Test component interactions
+- **E2E Tests**: Test complete user flows
+- **API Tests**: Test backend endpoints
+
+### Testing Tools
+- Use Bun's built-in test runner
+- Use React Testing Library for frontend
+- Mock external dependencies
+- Test error scenarios
+
+## Documentation
+
+### Code Documentation
+- Write clear JSDoc comments
+- Document complex business logic
+- Keep README files updated
+- Document API endpoints
+
+### Architecture Documentation
+- Document design decisions
+- Keep architecture diagrams updated
+- Document deployment procedures
+- Maintain troubleshooting guides
+
+## Security Best Practices
+
+### General Security
+- Validate all inputs
+- Use HTTPS in production
+- Implement proper authentication
+- Follow OWASP guidelines
+
+### Data Protection
+- Encrypt sensitive data
+- Use secure session management
+- Implement proper CORS policies
+- Sanitize user inputs
+
+## Performance Guidelines
+
+### Optimization
+- Optimize bundle sizes
+- Implement proper caching
+- Use efficient algorithms
+- Monitor performance metrics
+
+### Monitoring
+- Set up error tracking
+- Monitor API response times
+- Track user experience metrics
+- Set up alerts for issues
+
+## Deployment
+
+### Environments
+- **Development**: Local development
+- **Staging**: Pre-production testing
+- **Production**: Live environment
+
+### Deployment Process
+- Use GitHub Actions for CI/CD
+- Implement automated testing
+- Use blue-green deployment
+- Monitor deployment health
+
+## Troubleshooting
+
+### Common Issues
+- Document common problems
+- Provide step-by-step solutions
+- Keep troubleshooting guides updated
+- Share knowledge with team
+
+### Debugging
+- Use proper logging
+- Implement error tracking
+- Use development tools effectively
+- Document debugging procedures
+
+## Team Collaboration
+
+### Code Review
+- Review all code changes
+- Provide constructive feedback
+- Ensure code quality standards
+- Share knowledge and best practices
+
+### Communication
+- Use clear and concise language
+- Document decisions and rationale
+- Share knowledge with team
+- Maintain open communication
+
+## Maintenance
+
+### Regular Tasks
+- Update dependencies regularly
+- Monitor security advisories
+- Review and update documentation
+- Clean up unused code
+
+### Technical Debt
+- Identify and track technical debt
+- Plan refactoring activities
+- Maintain code quality
+- Balance new features with maintenance
+description:
+globs:
+alwaysApply: true
+---

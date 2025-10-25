@@ -1,0 +1,88 @@
+name: Deploy to Dev Environment
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd apps/backend
+          bun install
+
+      - name: Deploy to Cloudflare Workers (Dev)
+        id: deploy-backend
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env dev
+          workingDirectory: apps/backend
+          secrets: |
+            DATABASE_URL
+          environment: dev
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Notify deployment
+        run: |
+          echo "✅ Backend deployed to dev environment successfully!"
+          echo "Worker: your_project_name-dev"
+          echo "Deployment URL: ${{ steps.deploy-backend.outputs.deployment-url }}"
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd apps/frontend
+          bun install
+
+      - name: Build frontend
+        run: |
+          cd apps/frontend
+          bun run build:cloudflare
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: Build and deploy to Cloudflare Workers (Dev)
+        id: deploy-frontend
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env dev
+          workingDirectory: apps/frontend
+          secrets: |
+            NEXT_PUBLIC_API_URL
+          environment: dev
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: Notify deployment
+        run: |
+          echo "✅ Frontend deployed to dev environment successfully!"
+          echo "Worker: your_project_name-frontend-dev"
+          echo "Deployment URL: ${{ steps.deploy-frontend.outputs.deployment-url }}"

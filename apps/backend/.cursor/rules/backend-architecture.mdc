@@ -1,0 +1,170 @@
+# Backend Architecture & Coding Rules
+
+## Architecture Overview
+
+This backend follows Clean Architecture principles with the following structure:
+
+```
+src/
+├── db/                        # Database schema and connection
+│   ├── schema.ts             # Drizzle ORM schema definitions
+│   └── connection.ts         # Database client setup
+├── use-cases/                 # Application Business Rules
+│   └── user/                 # User-related use cases
+├── presentation/              # Web framework layer (Hono)
+│   ├── controllers/          # Request handlers
+│   └── routes/               # Route definitions
+└── infrastructure/            # Validators, external tools
+    └── validators/           # Zod validation schemas
+```
+
+## Dependency Direction
+
+```
+Frameworks & Drivers → Interface Adapters → Use Cases → Domain
+```
+
+- **Domain**: Innermost layer, no dependencies
+- **Use Cases**: Only depends on Domain
+- **Interface Adapters**: Depends on Use Cases and Domain
+- **Frameworks & Drivers**: Outermost layer, can depend on everything
+
+## Technology Stack
+
+- **Runtime**: Cloudflare Workers
+- **Framework**: Hono.js
+- **Language**: TypeScript
+- **Package Manager**: Bun
+- **Linting/Formatting**: Biome
+- **Validation**: Zod
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: bcryptjs for password hashing
+- **Architecture**: Clean Architecture
+
+## Coding Standards
+
+### File Naming
+- Use PascalCase for classes and interfaces: `TodoController.ts`
+- Use camelCase for functions and variables: `createTodo`
+- Use kebab-case for files: `todo-controller.ts`
+
+### Directory Structure
+- Follow the Clean Architecture layers strictly
+- Keep domain entities pure (no external dependencies)
+- Use dependency injection for external dependencies
+- Implement repository pattern for data access
+
+### TypeScript Rules
+- Avoid `any` type - use proper typing
+- Use interfaces for contracts
+- Prefer readonly properties where possible
+- Use strict TypeScript configuration
+
+### Error Handling
+- Create custom exception classes in domain layer
+- Use Result pattern for error handling
+- Implement proper HTTP status codes in controllers
+
+### Validation
+- Use Zod for input validation
+- Validate at the presentation layer
+- Keep business rules in use cases
+
+## API Design
+
+### Endpoints
+- Use RESTful conventions
+- Prefix with `/api` for API routes
+- Use proper HTTP methods (GET, POST, PUT, DELETE)
+- Return consistent JSON responses
+
+### Current API Endpoints
+- `GET /api/users` - Get all users
+- `POST /api/users` - Create new user
+
+### Response Format
+```typescript
+// Success response
+{
+  users: User[] | user: User
+}
+
+// Error response
+{
+  error: string;
+  details?: ValidationError[];
+}
+```
+
+## Database & Persistence
+
+### Current State
+- Using PostgreSQL with Drizzle ORM
+- Cloudflare Hyperdrive for database connection
+- Docker Compose for local development
+
+### Database Schema
+- User management with authentication
+- Proper password hashing with bcryptjs
+- Soft delete support with deletedAt field
+
+### Database Operations
+- Use Drizzle ORM for type-safe queries
+- Implement proper error handling
+- Use transactions for data consistency
+- Follow database naming conventions
+
+## Testing Guidelines
+
+### Test Structure
+- Unit tests for each layer
+- Integration tests for use cases
+- E2E tests for API endpoints
+
+### Test Naming
+- Use descriptive test names
+- Follow pattern: `describe('ClassName', () => {})`
+- Use `it('should do something', () => {})` for test cases
+
+## Development Workflow
+
+### Scripts
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run lint` - Run Biome linter
+- `bun run type-check` - Run TypeScript type checking
+- `bun run db:generate` - Generate Drizzle migrations
+- `bun run db:migrate` - Run database migrations
+- `bun run db:studio` - Open Drizzle Studio
+
+### Code Quality
+- Run linting before commits
+- Ensure type checking passes
+- Follow Clean Architecture principles
+- Write meaningful commit messages
+
+## Security Considerations
+
+- Validate all inputs
+- Use CORS properly
+- Implement authentication (future)
+- Sanitize data before database operations
+- Use environment variables for secrets
+
+## Performance
+
+- Optimize for Cloudflare Workers environment
+- Use efficient data structures
+- Minimize external API calls
+- Implement proper caching strategies
+
+## Deployment
+
+- Deploy to Cloudflare Workers
+- Use environment-specific configurations
+- Monitor performance and errors
+- Implement proper logging
+description:
+globs:
+alwaysApply: true
+---

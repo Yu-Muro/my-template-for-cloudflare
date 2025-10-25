@@ -1,0 +1,29 @@
+# AikidoSec/safe-chain を利用して、悪意ある npm パッケージが含まれていないかチェックする
+# https://github.com/AikidoSec/safe-chain
+name: Check npm packages by AikidoSec Safe Chain
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-npm-packages-by-aikidosec-safe-chain:
+    runs-on: ubuntu-latest
+
+    steps:
+      # リポジトリをチェックアウト
+      - uses: actions/checkout@v5
+        with:
+          ref: "refs/pull/${{ github.event.number }}/merge"
+
+      # Bunをセットアップ
+      - uses: oven-sh/setup-bun@v2
+
+      # AikidoSec Safe Chainをセットアップ
+      - name: Setup safe-chain
+        run: |
+          npm i -g @aikidosec/safe-chain
+          safe-chain setup-ci
+
+      - name: Install dependencies
+        run: bun ci
