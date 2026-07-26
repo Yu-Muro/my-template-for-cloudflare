@@ -1,0 +1,21 @@
+name: Auto Assign
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  add-reviewers:
+    runs-on: ubuntu-slim
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == github.event.pull_request.head.repo.full_name
+    steps:
+      - name: Add reviewers and assignees
+        uses: kentaro-m/auto-assign-action@0a2c53d3721e4c5cfcce6afd4014aecc337979f6 # v2.0.2

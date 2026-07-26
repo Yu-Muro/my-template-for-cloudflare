@@ -1,16 +1,52 @@
 version: 2
 updates:
   - package-ecosystem: "bun"
-    directories:
-      - "/**/*"
+    directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
     cooldown:
-      default-days: 5
+      default-days: 7
       semver-minor-days: 7
       semver-patch-days: 3
     ignore:
       - dependency-name: "*"
-        update-types: [
-          "version-update:semver-major"
-        ]
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "bun"
+    directory: "/apps/backend"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-minor-days: 7
+      semver-patch-days: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "drizzle-orm"
+      - dependency-name: "drizzle-kit"
+  - package-ecosystem: "bun"
+    directory: "/apps/frontend"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-minor-days: 7
+      semver-patch-days: 3
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7

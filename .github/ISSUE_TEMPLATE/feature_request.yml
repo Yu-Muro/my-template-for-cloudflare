@@ -1,0 +1,69 @@
+name: "✨ 機能提案"
+description: "新機能や改善案はこちら"
+title: "feat: "
+labels:
+    - enhancement
+body:
+    - type: markdown
+      attributes:
+          value: |
+              提案ありがとうございます。背景とゴールを明確にすると、実装優先度の判断がしやすくなります。
+
+    - type: input
+      id: summary
+      attributes:
+          label: 提案概要
+          description: 何を実現したいかを一文で記載してください
+          placeholder: "例: 一般ユーザー向けに検索結果の絞り込み機能を追加したい"
+      validations:
+          required: true
+
+    - type: textarea
+      id: problem
+      attributes:
+          label: 背景・課題
+          description: 現状の何が問題かを記載してください
+          placeholder: "例: 検索結果件数が多いと目的の情報に到達しづらい"
+      validations:
+          required: true
+
+    - type: textarea
+      id: proposal
+      attributes:
+          label: 提案内容
+          description: 実現方法の案を記載してください（複数案でも可）
+          placeholder: "例: カテゴリ・日時・キーワードでの絞り込みUIを追加する"
+      validations:
+          required: true
+
+    - type: textarea
+      id: acceptance
+      attributes:
+          label: 受け入れ条件（任意）
+          description: 完了判断の基準があれば記載してください
+          placeholder: |
+              - [ ] 絞り込み条件を複数選択できる
+              - [ ] 条件変更時に一覧が更新される
+      validations:
+          required: false
+
+    - type: dropdown
+      id: target
+      attributes:
+          label: 想定影響範囲
+          multiple: true
+          options:
+              - frontend
+              - backend
+              - docs
+              - infrastructure
+      validations:
+          required: true
+
+    - type: textarea
+      id: additional
+      attributes:
+          label: 補足情報（任意）
+          description: 参考資料、関連Issue/PR、スクリーンショットなど
+      validations:
+          required: false

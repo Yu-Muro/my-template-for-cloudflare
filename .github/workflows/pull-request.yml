@@ -6,26 +6,33 @@ env:
 on:
   pull_request:
     branches:
-      - release
+      - main
       - develop
     types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   lint-and-test-backend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          bun-version: latest
+          persist-credentials: false
 
-      - name: Install dependencies
+      - name: Setup Bun workspace
+        uses: ./.github/actions/setup-bun-project
+
+      - name: Build backend
         run: |
           cd apps/backend
-          bun install
+          bun run build
 
       - name: Lint backend code
         run: |
@@ -42,26 +49,60 @@ jobs:
           cd apps/backend
           bun run test
 
-      - name: Build backend
+  verify-migration-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun workspace
+        uses: ./.github/actions/setup-bun-project
+
+      - name: Start CockroachDB
+        run: |
+          docker run -d \
+            --name cockroachdb \
+            -p 26257:26257 \
+            cockroachdb/cockroach:latest \
+            start-single-node --insecure
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/health?ready=1 > /dev/null 2>&1; then
+              echo "CockroachDB is ready"
+              break
+            fi
+            echo "Waiting for CockroachDB... ($i/30)"
+            sleep 2
+          done
+
+      - name: Create database
+        run: |
+          docker exec cockroachdb cockroach sql --insecure \
+            -e 'CREATE DATABASE IF NOT EXISTS "basic-knowledge-for-web";'
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://root@localhost:26257/basic-knowledge-for-web?sslmode=disable
         run: |
           cd apps/backend
-          bun run build
+          bun run db:migrate
 
   lint-and-test-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          bun-version: latest
+          persist-credentials: false
 
-      - name: Install dependencies
+      - name: Setup Bun workspace
+        uses: ./.github/actions/setup-bun-project
+
+      - name: Build for Cloudflare
         run: |
           cd apps/frontend
-          bun install
+          bun run build:cloudflare
 
       - name: Lint frontend code
         run: |
@@ -78,61 +119,30 @@ jobs:
           cd apps/frontend
           bun run test
 
-      - name: Build for Cloudflare
-        run: |
-          cd apps/frontend
-          bun run build:cloudflare
-
-  # Dependabot auto-approve job
-  dependabot-auto-approve:
-    if: github.actor == 'dependabot[bot]'
+  dependabot-auto-merge:
+    runs-on: ubuntu-slim
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == github.event.pull_request.head.repo.full_name
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [lint-and-test-backend, lint-and-test-frontend]
+    needs: ["lint-and-test-backend", "verify-migration-backend", "lint-and-test-frontend"]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
       - name: Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: Dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Show update type
-        run: |
-          echo "Update type: ${{ steps.metadata.outputs.update-type }}"
-          echo "Package ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}"
-          echo "Package name: ${{ steps.metadata.outputs.package-name }}"
-
-      - name: Approve PR
-        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+      - name: Approve Pull Request
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major'}}
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge for Dependabot PRs
-        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+      - name: Merge Pull Request
         run: gh pr merge --auto --merge "$PR_URL"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Comment on major updates
-        if: ${{ steps.metadata.outputs.update-type == 'version-update:semver-major' }}
-        run: |
-          gh pr comment "$PR_URL" --body "⚠️ **Major version update detected** ⚠️
-
-          This is a major version update that may include breaking changes. Please review manually before merging.
-
-          **Update Details:**
-          - Package: ${{ steps.metadata.outputs.package-name }}
-          - Ecosystem: ${{ steps.metadata.outputs.package-ecosystem }}
-          - Update Type: ${{ steps.metadata.outputs.update-type }}"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

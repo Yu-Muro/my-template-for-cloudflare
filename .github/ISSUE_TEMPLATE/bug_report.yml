@@ -1,0 +1,77 @@
+name: "🐛 バグ報告"
+description: "不具合の報告はこちら"
+title: "fix: "
+labels:
+    - bug
+body:
+    - type: markdown
+      attributes:
+          value: |
+              ご報告ありがとうございます。再現に必要な情報をできるだけ具体的に記載してください。
+
+    - type: input
+      id: summary
+      attributes:
+          label: 概要
+          description: どんな不具合かを一文で記載してください
+          placeholder: "例: ログイン画面で特定入力時に意図しない画面遷移が発生する"
+      validations:
+          required: true
+
+    - type: textarea
+      id: steps
+      attributes:
+          label: 再現手順
+          description: 手順を番号付きで記載してください
+          placeholder: |
+              1. /login を開く
+              2. メール入力欄に xxx を入力
+              3. 期待しない遷移が発生
+      validations:
+          required: true
+
+    - type: textarea
+      id: expected
+      attributes:
+          label: 期待される挙動
+          placeholder: "例: ログイン画面に留まる"
+      validations:
+          required: true
+
+    - type: textarea
+      id: actual
+      attributes:
+          label: 実際の挙動
+          placeholder: "例: /register に遷移する"
+      validations:
+          required: true
+
+    - type: dropdown
+      id: target
+      attributes:
+          label: 影響範囲
+          multiple: true
+          options:
+              - frontend
+              - backend
+              - docs
+              - infrastructure
+      validations:
+          required: true
+
+    - type: input
+      id: environment
+      attributes:
+          label: 実行環境
+          description: OS / Browser / バージョンなど
+          placeholder: "例: macOS 15.4 / Chrome 135"
+      validations:
+          required: false
+
+    - type: textarea
+      id: logs
+      attributes:
+          label: 補足情報（ログ・スクリーンショットなど）
+          render: shell
+      validations:
+          required: false
